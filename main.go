@@ -133,6 +133,18 @@ func printTutorialBuild() {
 	fmt.Println("└────────────────────────────────────────────────────────┘")
 }
 
+func printTutorialGen() {
+	fmt.Println("┌────────────────────────────────────────┐")
+	fmt.Println("│               Generation               │")
+	fmt.Println("├────────────────────────────────────────┤")
+	fmt.Println("│1.  --assets-models                     │")
+	fmt.Println("│2.  --localize                          │")
+	fmt.Println("│3.  --app-icon                          │")
+	fmt.Println("│4.  --splash-screen                     │")
+	fmt.Println("│Or Please read README to learn more.    │")
+	fmt.Println("└────────────────────────────────────────┘")
+}
+
 func contains(slice []string, value string) bool {
 	for _, v := range slice {
 		if v == value {
@@ -230,7 +242,8 @@ func runBuildOption(args []string) {
 		os.Exit(1)
 	}
 	buildType := args[2]
-	if buildType != "store-ios" && buildType != "store-android" && buildType != "store" && len(args) < 4 {
+	isBuildStore := buildType != "store-ios" && buildType != "store-android" && buildType != "store" && len(args) < 4
+	if !isBuildStore {
 		printTutorialBuild()
 		os.Exit(1)
 	}
@@ -238,11 +251,30 @@ func runBuildOption(args []string) {
 	if len(args) == 4 {
 		tester = args[3]
 	}
-	if !contains(listBuildType, buildType) || !contains(listTestter, tester) {
+	if (!contains(listBuildType, buildType) || !contains(listTestter, tester)) && !isBuildStore {
 		printTutorialBuild()
 		os.Exit(1)
 	}
 	runCommand("build.sh", buildType, tester)
+}
+
+func runGen(args []string) {
+	listGen := []string{
+		"--assets-models",
+		"--localize",
+		"--app-icon",
+		"--splash-screen",
+	}
+	if len(os.Args) < 3 {
+		printTutorialGen()
+		os.Exit(1)
+	}
+	genType := args[2]
+	if !contains(listGen, genType) {
+		printTutorialGen()
+		os.Exit(1)
+	}
+	runCommand("gen.sh", genType)
 }
 
 func runCommand(command string, args ...string) {
@@ -299,7 +331,6 @@ func updateFvmLinked() {
 }
 
 func main() {
-	updateFvmLinked()
 	if len(os.Args) < 2 {
 		printTutorial()
 		os.Exit(1)
@@ -316,7 +347,11 @@ func main() {
 	showHelpLong := flag.Bool("help", false, "Show help")
 	showVersion := flag.Bool("version", false, "Show version")
 
-	if runOption != "build" {
+	if runOption != "create" {
+		updateFvmLinked()
+	}
+
+	if runOption != "build" && runOption != "gen" {
 		err := flag.CommandLine.Parse(os.Args[2:])
 		if err != nil {
 			printTutorial()
@@ -345,6 +380,13 @@ func main() {
 	case "build":
 		if fileExists() {
 			runBuildOption(os.Args)
+		} else {
+			fmt.Println("Error: No such dmg config file")
+			os.Exit(1)
+		}
+	case "gen":
+		if fileExists() {
+			runGen(os.Args)
 		} else {
 			fmt.Println("Error: No such dmg config file")
 			os.Exit(1)
