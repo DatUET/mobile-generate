@@ -13,6 +13,7 @@ type FvmConfig struct {
 }
 
 type Config struct {
+	Description    string `json:"description"`
 	ProjectName    string `json:"projectName"`
 	PackageName    string `json:"packageName"`
 	AppName        string `json:"appName"`
@@ -185,7 +186,7 @@ func runNewStack(namePage string, prefix string, enableLocal bool) {
 	}
 
 	if namePage == "" || prefix == "" {
-		printTutorialNewPage()
+		printTutorialNewStack()
 		os.Exit(1)
 	}
 
