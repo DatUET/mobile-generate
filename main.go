@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
+	"unicode"
 )
 
 type FvmConfig struct {
@@ -29,7 +31,7 @@ func fileExists() bool {
 	return !os.IsNotExist(err) // Trả về true nếu file tồn tại
 }
 
-func getParttern() string {
+func getPattern() string {
 	// Mở file
 	filePath := ".dmg/config.json" // Đường dẫn file JSON
 	file, err := os.Open(filePath)
@@ -87,7 +89,7 @@ OPTION:
 func printTutorialNewPage() {
 	fmt.Println(`Usage: dmg new_page [OPTION]
 OPTION:
-  -n            Name page (Required)
+  -n            Name page
   -p            Prefix name file (Required)
   -t            Screen type, default is normal screen (Optional)
 EXAMPLE:
@@ -97,7 +99,7 @@ EXAMPLE:
 func printTutorialNewStack() {
 	fmt.Println(`Usage: dmg new_stack [OPTION]
 OPTION:
-  -n            	Name stack (Required)
+  -n            	Name stack
   -p            	Prefix name file (Required)
   --enable-local	Generate local data source (Optional)
 EXAMPLE:
@@ -155,23 +157,37 @@ func contains(slice []string, value string) bool {
 	return false
 }
 
+func convertClassName(input string) string {
+	words := strings.Split(input, "_")
+	for i, word := range words {
+		if len(word) > 0 {
+			words[i] = string(unicode.ToUpper(rune(word[0]))) + word[1:]
+		}
+	}
+	return strings.Join(words, "")
+}
+
 func runNewPage(namePage string, prefix string, screenType string) {
+	className := namePage
 	if !fileExists() {
 		fmt.Println("Error: No such dmg config file")
 		os.Exit(1)
 	}
 
-	if namePage == "" || prefix == "" {
+	if prefix == "" {
 		printTutorialNewPage()
 		os.Exit(1)
 	}
+	if namePage == "" {
+		className = convertClassName(prefix)
+	}
 
-	pattern := getParttern()
+	pattern := getPattern()
 	switch pattern {
 	case "BLoC":
-		runCommand("new_page.sh", "-n", namePage, "-p", prefix, "-t", screenType)
+		runCommand("new_page.sh", "-n", className, "-p", prefix, "-t", screenType)
 	case "GetX":
-		runCommand("new_page_getx.sh", "-n", namePage, "-p", prefix, "-t", screenType)
+		runCommand("new_page_getx.sh", "-n", className, "-p", prefix, "-t", screenType)
 	case "Riverpod":
 		fmt.Println("Currently, automatic screen generation for Riverpod pattern is not supported. We will update later.")
 	default:
@@ -180,35 +196,39 @@ func runNewPage(namePage string, prefix string, screenType string) {
 }
 
 func runNewStack(namePage string, prefix string, enableLocal bool) {
+	className := namePage
 	if !fileExists() {
 		fmt.Println("Error: No such dmg config file")
 		os.Exit(1)
 	}
 
-	if namePage == "" || prefix == "" {
+	if prefix == "" {
 		printTutorialNewStack()
 		os.Exit(1)
 	}
+	if namePage == "" {
+		className = convertClassName(prefix)
+	}
 
-	pattern := getParttern()
+	pattern := getPattern()
 	switch pattern {
 	case "BLoC":
 		if enableLocal {
-			runCommand("new_stack.sh", "-n", namePage, "-p", prefix, "--enable-local")
+			runCommand("new_stack.sh", "-n", className, "-p", prefix, "--enable-local")
 		} else {
-			runCommand("new_stack.sh", "-n", namePage, "-p", prefix)
+			runCommand("new_stack.sh", "-n", className, "-p", prefix)
 		}
 	case "GetX":
 		if enableLocal {
-			runCommand("new_stack_getx.sh", "-n", namePage, "-p", prefix, "--enable-local")
+			runCommand("new_stack_getx.sh", "-n", className, "-p", prefix, "--enable-local")
 		} else {
-			runCommand("new_stack_getx.sh", "-n", namePage, "-p", prefix)
+			runCommand("new_stack_getx.sh", "-n", className, "-p", prefix)
 		}
 	case "Riverpod":
 		if enableLocal {
-			runCommand("new_stack.sh", "-n", namePage, "-p", prefix, "--enable-local")
+			runCommand("new_stack.sh", "-n", className, "-p", prefix, "--enable-local")
 		} else {
-			runCommand("new_stack.sh", "-n", namePage, "-p", prefix)
+			runCommand("new_stack.sh", "-n", className, "-p", prefix)
 		}
 	default:
 		fmt.Println("Invalid pattern")
@@ -233,7 +253,7 @@ func runBuildOption(args []string) {
 		"--store",
 	}
 
-	listTestter := []string{
+	listTester := []string{
 		"--dev",
 		"--tester",
 		"--client",
@@ -252,7 +272,7 @@ func runBuildOption(args []string) {
 	if len(args) == 4 {
 		tester = args[3]
 	}
-	if (!contains(listBuildType, buildType) || !contains(listTestter, tester)) && !isBuildStore {
+	if !contains(listBuildType, buildType) || !contains(listTester, tester) {
 		printTutorialBuild()
 		os.Exit(1)
 	}
