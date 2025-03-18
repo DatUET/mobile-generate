@@ -263,8 +263,8 @@ func runBuildOption(args []string) {
 		os.Exit(1)
 	}
 	buildType := args[2]
-	isBuildStore := buildType != "store-ios" && buildType != "store-android" && buildType != "store" && len(args) < 4
-	if !isBuildStore {
+	isNotBuildStore := buildType != "store-ios" && buildType != "store-android" && buildType != "store" && len(args) < 4
+	if isNotBuildStore {
 		printTutorialBuild()
 		os.Exit(1)
 	}
