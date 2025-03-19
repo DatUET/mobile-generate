@@ -24,7 +24,7 @@ type Config struct {
 	CreateAt       string `json:"createAt"`
 }
 
-const Version = "0.1.0"
+const Version = "0.1.5"
 
 func fileExists() bool {
 	_, err := os.Stat(".dmg/config.json")
@@ -315,7 +315,7 @@ func updateFvmLinked() {
 		fmt.Println("Error: No such dmg config file")
 		os.Exit(1)
 	}
-	fvnFlutterVersion := getFvmFlutterVersion()
+	fvmFlutterVersion := getFvmFlutterVersion()
 	filePath := ".dmg/config.json" // Đường dẫn file JSON
 
 	// Đọc nội dung file JSON
@@ -334,7 +334,7 @@ func updateFvmLinked() {
 	}
 
 	// Cập nhật giá trị flutterVersion
-	config.FlutterVersion = fvnFlutterVersion // Giá trị mới
+	config.FlutterVersion = fvmFlutterVersion // Giá trị mới
 
 	// Chuyển struct về JSON
 	updatedJSON, err := json.MarshalIndent(config, "", "    ")
@@ -368,6 +368,16 @@ func main() {
 	showHelpLong := flag.Bool("help", false, "Show help")
 	showVersion := flag.Bool("version", false, "Show version")
 
+	// Handle --help and --version
+	if *showHelp || *showHelpLong {
+		printTutorial()
+		os.Exit(0)
+	}
+	if *showVersion {
+		fmt.Println(Version)
+		os.Exit(0)
+	}
+
 	if runOption != "create" {
 		updateFvmLinked()
 	}
@@ -378,16 +388,6 @@ func main() {
 			printTutorial()
 			os.Exit(1)
 		}
-	}
-
-	// Handle --help and --version
-	if *showHelp || *showHelpLong {
-		printTutorial()
-		os.Exit(0)
-	}
-	if *showVersion {
-		fmt.Println(Version)
-		os.Exit(0)
 	}
 
 	// Handle different options
