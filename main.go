@@ -24,7 +24,7 @@ type Config struct {
 	CreateAt       string `json:"createAt"`
 }
 
-const Version = "0.1.5"
+const Version = "0.1.6"
 
 func fileExists() bool {
 	_, err := os.Stat(".dmg/config.json")
@@ -367,6 +367,8 @@ func main() {
 	showHelp := flag.Bool("h", false, "Show help")
 	showHelpLong := flag.Bool("help", false, "Show help")
 	showVersion := flag.Bool("version", false, "Show version")
+
+	flag.Parse()
 
 	// Handle --help and --version
 	if *showHelp || *showHelpLong {
